@@ -2,40 +2,53 @@ import { useState, useEffect } from "react";
 import { socket } from "./socket";
 import Note from "./Note";
 import "./index.css";
+import Strings from "./Strings";
 
 export default function App() {
   const [notes, setNotes] = useState([]);
+  const [connections, setConnections] = useState([]);
 
   // ---- Listen for changes coming FROM the server (other people) ----
   useEffect(() => {
-    // Full board sent on connect — catches us up to the current state.
-    socket.on("board:init", (serverNotes) => {
-      setNotes(serverNotes);
+    // board:init now sends { notes, connections }
+    socket.on("board:init", (board) => {
+      setNotes(board.notes || []);
+      setConnections(board.connections || []);
     });
 
-    // Someone else created a note.
     socket.on("note:create", (note) => {
       setNotes((prev) => [...prev, note]);
     });
 
-    // Someone else moved or edited a note.
     socket.on("note:update", ({ id, changes }) => {
       setNotes((prev) =>
         prev.map((n) => (n.id === id ? { ...n, ...changes } : n))
       );
     });
 
-    // Someone else deleted a note.
     socket.on("note:delete", (id) => {
       setNotes((prev) => prev.filter((n) => n.id !== id));
+      // also drop any strings touching that note
+      setConnections((prev) =>
+        prev.filter((c) => c.fromId !== id && c.toId !== id)
+      );
     });
 
-    // Clean up listeners so they don't stack on hot-reload.
+    socket.on("connection:create", (conn) => {
+      setConnections((prev) => [...prev, conn]);
+    });
+
+    socket.on("connection:delete", (id) => {
+      setConnections((prev) => prev.filter((c) => c.id !== id));
+    });
+
     return () => {
       socket.off("board:init");
       socket.off("note:create");
       socket.off("note:update");
       socket.off("note:delete");
+      socket.off("connection:create");
+      socket.off("connection:delete");
     };
   }, []);
 
@@ -99,6 +112,9 @@ export default function App() {
           + Add photo
         </button>
       </div>
+
+      <Strings notes={notes} connections={connections} />
+
       {notes.map((note) => (
         <Note
           key={note.id}
