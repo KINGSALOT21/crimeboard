@@ -9,7 +9,7 @@ export default function Strings({ notes, connections, pending }) {
   const NOTE_HALF = 75;
 
   return (
-    <svg className="strings-layer">
+    <svg className="strings-layer" style={{ overflow: "visible" }}>
       {connections.map((conn) => {
         const from = noteById[conn.fromId];
         const to = noteById[conn.toId];

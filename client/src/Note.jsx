@@ -1,12 +1,11 @@
 import { useRef, useState } from "react";
 
-export default function Note({ note, onUpdate, onDelete, onStartConnection }) {
+export default function Note({ note, zoom, onUpdate, onDelete, onStartConnection }) {
   // Track the drag offset so the note doesn't "jump" to the cursor on grab.
   const dragOffset = useRef({ x: 0, y: 0 });
   const [enlarged, setEnlarged] = useState(false);
 
   function handlePointerDown(e) {
-    // Don't start a drag when clicking the textarea or delete button.
     if (
       e.target.tagName === "TEXTAREA" ||
       e.target.tagName === "INPUT" ||
@@ -14,16 +13,17 @@ export default function Note({ note, onUpdate, onDelete, onStartConnection }) {
     ) {
       return;
     }
-    // Remember where inside the note we grabbed it.
-    dragOffset.current = {
-      x: e.clientX - note.x,
-      y: e.clientY - note.y,
-    };
+
+    const startMouseX = e.clientX;
+    const startMouseY = e.clientY;
+    const startNoteX = note.x;
+    const startNoteY = note.y;
 
     function handlePointerMove(moveEvent) {
+      // Screen movement divided by zoom = board movement.
       onUpdate(note.id, {
-        x: moveEvent.clientX - dragOffset.current.x,
-        y: moveEvent.clientY - dragOffset.current.y,
+        x: startNoteX + (moveEvent.clientX - startMouseX) / zoom,
+        y: startNoteY + (moveEvent.clientY - startMouseY) / zoom,
       });
     }
 
@@ -95,7 +95,7 @@ export default function Note({ note, onUpdate, onDelete, onStartConnection }) {
           onChange={(e) => onUpdate(note.id, { text: e.target.value })}
         />
       )}
-      
+
       {enlarged && (
         <div
           className="lightbox"
