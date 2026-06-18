@@ -2,12 +2,10 @@
 // Each connection links two notes; we look up their current positions
 // and draw a line between the centers. Because positions come from the
 // live notes array, dragging a note redraws its strings automatically.
-export default function Strings({ notes, connections }) {
-  // Quick lookup: note id -> note, so we can find positions fast.
+export default function Strings({ notes, connections, pending }) {
   const noteById = {};
   for (const n of notes) noteById[n.id] = n;
 
-  // Notes are 150px wide; aim the string at roughly the note's center.
   const NOTE_HALF = 75;
 
   return (
@@ -15,7 +13,6 @@ export default function Strings({ notes, connections }) {
       {connections.map((conn) => {
         const from = noteById[conn.fromId];
         const to = noteById[conn.toId];
-        // If either note is missing, skip (shouldn't happen, but safe).
         if (!from || !to) return null;
 
         return (
@@ -29,6 +26,22 @@ export default function Strings({ notes, connections }) {
           />
         );
       })}
+
+      {/* The string currently being dragged from a pin to the cursor. */}
+      {pending &&
+        noteById[pending.fromId] &&
+        (() => {
+          const from = noteById[pending.fromId];
+          return (
+            <line
+              x1={from.x + NOTE_HALF}
+              y1={from.y + NOTE_HALF}
+              x2={pending.cursorX}
+              y2={pending.cursorY}
+              className="string-line string-line--pending"
+            />
+          );
+        })()}
     </svg>
   );
 }

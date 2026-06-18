@@ -136,3 +136,85 @@ body {
 .note {
   z-index: 2; /* keep notes above the strings */
 }
+
+.note-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff6b6b, #b3261e);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  cursor: crosshair;
+  z-index: 3;
+}
+
+.string-line--pending {
+  stroke-dasharray: 6 4;   /* dashed while dragging, for feedback */
+  opacity: 0.8;
+}
+
+
+.remote-cursor {
+  position: absolute;
+  pointer-events: none;   /* never blocks your own clicks */
+  z-index: 10;
+  transform: translate(-2px, -2px);
+  transition: left 0.05s linear, top 0.05s linear; /* smooths the motion */
+}
+
+.remote-cursor-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50% 50% 50% 0;   /* teardrop pointer shape */
+  background: #2d7dd2;
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.remote-cursor-label {
+  position: absolute;
+  left: 16px;
+  top: 10px;
+  background: #2d7dd2;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;                         /* covers the whole screen */
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;                     /* above everything */
+  cursor: zoom-out;
+  /* counter the parent note's rotation so the image sits straight */
+  transform: none;
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  border: 8px solid #fff;           /* polaroid-style white frame, enlarged */
+  background: #fff;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  font-size: 2rem;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}
