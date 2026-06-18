@@ -51,6 +51,19 @@ io.on("connection", async (socket) => {
   } catch (err) {
     console.error("Failed to load board:", err);
   }
+  // Relay this client's cursor position to everyone else.
+  // Cursors are ephemeral — no database, just broadcast.
+  socket.on("cursor:move", (pos) => {
+    socket.broadcast.emit("cursor:move", {
+      id: socket.id,        // who this cursor belongs to
+      x: pos.x,
+      y: pos.y,
+    });
+  });
+
+  // When someone disconnects, tell others to remove their cursor.
+  // (We tuck this into the existing disconnect handler.)
+
 
   // Create: insert the new note, then broadcast it.
   socket.on("note:create", async (note) => {
@@ -149,6 +162,7 @@ io.on("connection", async (socket) => {
 
   socket.on("disconnect", (reason) => {
     console.log(`❌ Client disconnected: ${socket.id} (${reason})`);
+    socket.broadcast.emit("cursor:gone", socket.id);
   });
 });
 
