@@ -38,8 +38,16 @@ io.on("connection", async (socket) => {
 
   // Load the whole board from the database for this new client.
   try {
-    const { rows } = await pool.query("SELECT * FROM notes");
-    socket.emit("board:init", rows.map(rowToNote));
+    const notesResult = await pool.query("SELECT * FROM notes");
+    const connResult = await pool.query("SELECT * FROM connections");
+    socket.emit("board:init", {
+      notes: notesResult.rows.map(rowToNote),
+      connections: connResult.rows.map((r) => ({
+        id: r.id,
+        fromId: r.from_id,
+        toId: r.to_id,
+      })),
+    });
   } catch (err) {
     console.error("Failed to load board:", err);
   }
@@ -102,10 +110,37 @@ io.on("connection", async (socket) => {
     }
   });
 
+  // Create a connection (string) between two notes.
+  socket.on("connection:create", async (conn) => {
+    try {
+      await pool.query(
+        `INSERT INTO connections (id, from_id, to_id) VALUES ($1, $2, $3)`,
+        [conn.id, conn.fromId, conn.toId]
+      );
+      socket.broadcast.emit("connection:create", conn);
+    } catch (err) {
+      console.error("Connection create failed:", err);
+    }
+  });
+
+  // Delete a connection.
+  socket.on("connection:delete", async (id) => {
+    try {
+      await pool.query("DELETE FROM connections WHERE id = $1", [id]);
+      socket.broadcast.emit("connection:delete", id);
+    } catch (err) {
+      console.error("Connection delete failed:", err);
+    }
+  });
+
   // Delete: remove the row, then broadcast.
   socket.on("note:delete", async (id) => {
     try {
       await pool.query("DELETE FROM notes WHERE id = $1", [id]);
+      await pool.query(
+        "DELETE FROM connections WHERE from_id = $1 OR to_id = $1",
+        [id]
+      );
       socket.broadcast.emit("note:delete", id);
     } catch (err) {
       console.error("Delete failed:", err);

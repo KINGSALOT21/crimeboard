@@ -28,7 +28,17 @@ export async function initDb() {
       image_url TEXT DEFAULT ''
     );
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS connections (
+      id      TEXT PRIMARY KEY,
+      from_id TEXT NOT NULL,
+      to_id   TEXT NOT NULL
+    );
+  `);
+
   console.log("📦 Database ready");
 }
+
 
 export { pool };
