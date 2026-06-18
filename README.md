@@ -48,11 +48,3 @@ Client runs on http://localhost:5173
 
 Open http://localhost:5173 — you should see a "Connected to server ✅" status, proving the WebSocket handshake works.
 
-## Roadmap
-
-- [x] **Weekend 0** — Skeleton: React + Express + Socket.IO talking
-- [ ] **Weekend 1** — Single-user board: drop, drag, edit, delete sticky notes
-- [ ] **Weekend 2** — Real-time sync via WebSockets
-- [ ] **Weekend 3** — PostgreSQL persistence + crime-board flavor
-- [ ] **Weekend 4** — Red string connections + live cursors
-- [ ] **Weekend 5** — Docker, deploy, polish, docs
