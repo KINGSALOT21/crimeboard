@@ -4,13 +4,20 @@ const { Pool } = pg;
 
 // A connection pool manages a set of reusable DB connections.
 // The connection string points at the Docker Postgres from Step 1.
-const pool = new Pool({
-  host: process.env.DB_HOST || "127.0.0.1",
-  port: process.env.DB_PORT || 5544,
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "crimeboard",
-  database: process.env.DB_NAME || "crimeboard",
-});
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: process.env.DB_HOST || "127.0.0.1",
+        port: process.env.DB_PORT || 5544,
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "crimeboard",
+        database: process.env.DB_NAME || "crimeboard",
+      }
+);
 
 
 // Create the notes table if it doesn't already exist.
