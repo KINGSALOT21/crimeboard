@@ -1,50 +1,92 @@
 # 🔍 Crimeboard — Real-Time Collaborative Evidence Wall
 
-A freeform, real-time collaborative pinboard — think a detective's evidence wall or a fridge covered in notes. Multiple people open the same board and every sticky note, drag, edit, and connection syncs **live** across everyone's screen via WebSockets.
+A freeform, multiplayer pinboard — think a detective's evidence wall. Drop sticky notes and photos anywhere on an infinite, pannable, zoomable canvas, connect clues with red string, and watch everyone's changes (and cursors) sync **live** across every screen.
 
-> **Status:** Weekend 0 — skeleton. React + Express + Socket.IO are wired together and confirmed talking. No board yet; that's Weekend 1.
+**🌐 Live demo:** [crimeboard-app.onrender.com](https://crimeboard-app.onrender.com)
+*(Open it in two tabs — or send it to a friend — and watch the board sync in real time.)*
 
-## Stack
+> ⏳ Hosted on a free tier, so the first load may take ~30–60 seconds to wake the server. Give it a moment.
 
-- **Frontend:** React (Vite)
-- **Backend / real-time:** Node + Express + Socket.IO
-- **Database:** PostgreSQL *(added Weekend 3)*
-- **Containerization:** Docker *(added Weekend 5)*
+![Crimeboard demo](docs/demo.gif)
 
-## Project structure
+
+---
+
+## What it does
+
+- **Freeform canvas** — place notes and polaroids anywhere; no rigid columns
+- **Real-time collaboration** — every create, move, edit, and delete syncs instantly across all connected users via WebSockets
+- **Live cursors** — see where everyone else is on the board, in real time
+- **Red string connections** — drag from a note's pin to another to link clues; the string follows the notes as they move
+- **Pan & zoom** — navigate an infinite board, with all coordinates handled correctly across the camera transform
+- **Photo evidence** — paste an image URL to pin a polaroid; click to enlarge
+- **Persistence** — the board is saved to PostgreSQL and survives restarts
+
+## Tech stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | React (Vite) |
+| Real-time | Socket.IO (WebSockets) |
+| Backend | Node.js + Express |
+| Database | PostgreSQL |
+| Containerization | Docker + Docker Compose |
+| Hosting | Render (app) + Neon (managed Postgres) |
+
+## Architecture
+
+The server is the source of truth. Clients emit changes over WebSockets; the server persists each change to PostgreSQL and broadcasts it to all *other* connected clients. New clients receive the full board state on connect. Cursors are ephemeral — broadcast in board coordinates so they map to the same spot on every screen regardless of each viewer's pan/zoom.
 
 ```
-crimeboard/
-├── server/          # Express + Socket.IO backend
-│   ├── index.js     # Server entry point
-│   └── package.json
-└── client/          # React (Vite) frontend
-    ├── src/
-    │   ├── App.jsx
-    │   ├── socket.js   # Socket.IO client connection
-    │   └── main.jsx
-    └── package.json
+React client  ──WebSocket──▶  Express + Socket.IO server  ──SQL──▶  PostgreSQL
+     ▲                                    │
+     └──────── broadcast to peers ◀───────┘
 ```
 
-## Running it locally
+## Running locally
 
-You need **two terminals** — one for the server, one for the client.
+You'll need Node.js and Docker installed.
 
-**Terminal 1 — backend:**
+**Option A — Docker (one command):**
 ```bash
+docker compose up --build
+```
+Then open http://localhost:5173
+
+**Option B — manual (two terminals):**
+```bash
+# Terminal 1 — backend
 cd server
 npm install
 npm run dev
-```
-Server runs on http://localhost:3001
 
-**Terminal 2 — frontend:**
-```bash
+# Terminal 2 — frontend
 cd client
 npm install
 npm run dev
 ```
-Client runs on http://localhost:5173
+(Requires a local PostgreSQL; see `server/db.js` for connection defaults.)
 
-Open http://localhost:5173 — you should see a "Connected to server ✅" status, proving the WebSocket handshake works.
+## What I learned
 
+This was a build-from-scratch project to go deep on real-time systems. Highlights of what I worked through:
+
+- **WebSocket sync** — moving from the request/response model to a server that *pushes* state to clients, including handling the "don't echo a change back to its sender" and "catch up late joiners" problems.
+- **Coordinate systems** — implementing pan + zoom meant every screen-to-board conversion (placing notes, dragging, drawing string, positioning remote cursors) had to account for the camera transform. Getting cursors to map across viewers with different zoom levels was a satisfying fix.
+- **Debugging real infrastructure** — traced a stubborn database auth failure to two PostgreSQL instances colliding on the same port (found it with `netstat`), and fixed a Docker startup race between the server and database using health checks and `depends_on: service_healthy`.
+- **Deployment** — split hosting across Render (compute) and Neon (managed Postgres), wired together with environment variables, and debugged the inevitable CORS/origin mismatches between the deployed frontend and backend.
+
+## What's next
+
+- Sagging, shadowed string for a more physical "yarn" look
+- Named, color coded cursors per user
+- Click-to-delete for connections
+- Auto growing polaroid captions
+- Private rooms for individuals to play with friends(right now is public)
+- Sign up username
+- Fix Add photo issue
+- Add local files 
+
+---
+
+Built by Kingsley Randle.
